@@ -1,2 +1,2 @@
 # SMNSR
-Sparse Multimodal Neighborhood Serch Regression
+Sparse Multimodal Neighborhood Search Regression
