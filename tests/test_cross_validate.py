@@ -24,7 +24,7 @@ class Test(TestCase):
         "--bl_forecast",
         "--precomputed",
         "--mode",
-        "knssr_bypass",
+        "bypass_knnsr",
         "--modality_k",
         str(MODALITY_K),
         "--output_path",

@@ -47,7 +47,7 @@ def perform_cv(args):
         )
 
         y_hat = model.predict(
-            prediction_definition, target=args.target, baseline="first"
+            prediction_definition, target=args.target
         )
         prediction = y.merge(
             y_hat,

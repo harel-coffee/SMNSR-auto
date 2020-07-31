@@ -8,7 +8,6 @@ import modin.pandas as mpd
 import pandas as pd
 import vaex as vx
 import numpy as np
-import warnings
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 import re
 from sklearn.impute import KNNImputer
@@ -60,7 +59,7 @@ class TADPOLEData:
 
     def __init__(
         self,
-        data="TADPOLE_D1_D2.csv",
+        data,
         modality_path=None,
         modality_k=7,
         verbosity=2,
@@ -76,20 +75,20 @@ class TADPOLEData:
             )
 
         assert isinstance(data, str) or isinstance(
-            data.pd.Dataframe
-        ), "Input data must be specified as a file in the modality folder or as a DataFrame"
+            data, pd.DataFrame
+        ), "Input data must be specified as a filepath or as a DataFrame"
         if isinstance(data, str):
-            self._df = pd.read_csv(os.path.join(modality_path, data), low_memory=False)
-            self.df_raw = self._df.copy()
+            self._df = pd.read_csv(data, low_memory=False)
         else:
             self._df = data.copy()
+        self.df_raw = self._df.copy()
 
         if verbosity == 2:
             print("Correcting age")
         self._df = self.__correct_age(self._df)
         if verbosity == 2:
             print("Adding relative ventricle volume")
-        self._df = self.__add_RelativeVentricleVolume(self._df)
+        self._df = self.__add_relative_ventricle_volume(self._df)
 
         self._df = self.__propagate_dx(self._df)
 
@@ -128,9 +127,6 @@ class TADPOLEData:
 
         self.modality_names = self.get_modalities()
 
-        # self.data_file.replace(r'^\s*$', np.nan, regex=True, inplace=True)
-
-        # self.data_file = vx.from_pandas(self.data_file)
         self.set_backend("pandas")
 
         if challenge_filter:
@@ -181,7 +177,7 @@ class TADPOLEData:
         data[self.AGE] += data[self.YEARS_BL]
         return data
 
-    def __add_RelativeVentricleVolume(self, data):
+    def __add_relative_ventricle_volume(self, data):
         data[self.RELATIVE_VENTRICLE_VOLUME] = data[self.VENTRICLES] / data[self.ICV]
         return data
 
@@ -191,6 +187,9 @@ class TADPOLEData:
 
             if data_file.columns[c] in self.META:
                 continue
+            if dtypes[c] == "float64":
+                continue
+
             if np.issubdtype(dtypes[c], np.object):
                 data_file.loc[:, data_file.columns[c]] = data_file.loc[
                     :, data_file.columns[c]
@@ -274,7 +273,6 @@ class TADPOLEData:
                     data_file.columns[c] + "_" + str(i)
                     for i in range(0, encoded.shape[1])
                 ]
-                # column_df = pd.DataFrame(nan_data, columns=encoded_column_names)
 
                 for i in range(0, non_nan_indexes.shape[0]):
                     nan_data[non_nan_indexes[i], :] = encoded[i, :]
@@ -317,7 +315,7 @@ class TADPOLEData:
             for key in self.modality_columns.keys()
             if (key != "patient") and (key != "adas13")
         ]
-        if max_size == None or max_size > len(modality_names):
+        if max_size is None or max_size > len(modality_names):
             max_size = len(modality_names)
         separator = "-"
         all_combinations = []
@@ -360,7 +358,7 @@ class TADPOLEData:
                 "cognitive_simple" in modality and "cognitive1" not in modality
             ):
                 continue
-            # ADAS13 and MMSE were merged with modality one.
+            # ADAS13 and MMSE were merged with cognitive1.
             if modality == "cognitive_simple":
                 continue
             filtered[modality] = columns
@@ -381,8 +379,10 @@ class TADPOLEData:
                 ]
             else:
                 data = self._df[self._df.columns.intersection(column_names)]
+            if self.backend == "vaex":
+               data = data.to_pandas_df()
 
-            data.to_pandas_df().to_csv(save_folder + modality + ".csv")
+        data.to_csv(save_folder + modality + ".csv")
 
     def get_modalities(self):
         return [key for key in self.modality_columns.keys()]
@@ -510,12 +510,6 @@ class TADPOLEData:
             if self.has_modality(ptid, modality, time_points=time_points, target=target)
         ]
 
-    def RIDtoPTID(self, rid):
-        ptid = self.scaled_data(False).loc[
-            self.scaled_data(False)[self.RID] == rid, self.PTID
-        ]
-        return ptid.iloc[0]
-
     def get_ptids(self):
         return self._df[self.PTID].unique().tolist()
 
@@ -539,39 +533,6 @@ class TADPOLEData:
                 difference.append(c)
         return difference
 
-    # Here we pretend to be a databse
-    def add_measurement(self, measurement: pd.DataFrame):
-        # If the measurement does not exist in the database, add it.
-        if (
-            self._df[
-                (self._df[self.PTID].isin(measurement[self.PTID]))
-                & (self._df[self.C_MONTH].isin(measurement[self.C_MONTH]))
-            ].shape[0]
-            == 0
-        ):
-            if self.verbosity == 2:
-                print(
-                    "Adding month %i for patient %s"
-                    % (
-                        measurement[self.C_MONTH].values[0],
-                        measurement[self.PTID].values[0],
-                    )
-                )
-            if self.YEARS_BL in measurement.columns:
-                measurement = self.__correct_age(measurement)
-
-            measurement = self.__add_RelativeVentricleVolume(measurement)
-            measurement, _, _ = self.__one_hot_encode(
-                measurement, encoders=self.encoders
-            )
-            measurement = self.__translate_clinical_status(measurement)
-            relevant_columns = [
-                c for c in measurement.columns if c in self.relevant_columns
-            ]
-            measurement = measurement[relevant_columns]
-            measurement = self.__correct_non_numeric_entries(measurement)
-            self._df = pd.concat((self._df, measurement), axis=0, ignore_index=True)
-
     def get_patient_time_points(self, ptid):
         return sorted(
             self._df[self._df[self.PTID].isin([ptid])][self.C_MONTH].values.tolist()
@@ -592,12 +553,6 @@ class TADPOLEData:
         else:
             return np.nan
 
-    def snapshopt(self):
-        self._snapshot_data = self._df.copy()
-
-    def restore(self):
-        self._df = self._snapshot_data.copy()
-
     def rids_to_ptids(self, rids):
 
         rid_df: pd.DataFrame = pd.DataFrame(data=rids, columns=[self.RID])
@@ -608,3 +563,13 @@ class TADPOLEData:
             .head(1)
         )
         return ptid_df[self.PTID].values.tolist()
+
+    def save_dummy(self,file_name="dummy_data.csv",n_samples=300):
+
+        dummy = self.df_raw.copy()
+
+        for c in dummy.columns:
+            dummy[c] = np.random.permutation(dummy[c].values)
+
+        dummy = dummy[ dummy[TADPOLEData.PTID].isin( dummy[TADPOLEData.PTID].unique()[0:n_samples])]
+        dummy.to_csv(file_name)

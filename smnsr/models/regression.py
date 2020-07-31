@@ -72,14 +72,14 @@ class SMNSR(BaseStackedModel):
                 ("regression", XGBRFRegressor()),
             ]
             self.pipeline_params = {
-                "regression__n_estimators": [50, 100, 200, 400, 800],
-                "regression__max_depth": [1, 2, 3, 5, 7, 11],
+                "regression__n_estimators": [100, 200, 400, 800],
+                "regression__max_depth": [1, 3, 5, 7, 11],
                 "regression__subsample": [0.5, 1],
                 "regression__colsample_bylevel": [0.8, 1],
                 "regression__random_state": [0],
                 "regression__eval_metric": ["mae"],
-                "regression__reg_lambda": [0, 1, 10],
-                "regression__reg_alpha": [0, 1, 10],
+                "regression__reg_lambda": [0, 1],
+                "regression__reg_alpha": [0, 1],
                 "regression__objective": ["reg:squarederror"],
             }
         if self.mode == "linear":
@@ -118,7 +118,6 @@ class SMNSR(BaseStackedModel):
         ]
         self.fallback.fit(target_values, target_values)
         # If we are not using precalculated features, KNNSR models need to be trained.
-        # For each modality
         for i, modality in enumerate(modalities):
 
             if self.forecast:
@@ -135,7 +134,6 @@ class SMNSR(BaseStackedModel):
                 )
             tictoc.tic()
             x, y, t = self.data.getXY(ptids, modality, target=target)
-
             # If none of the patients in the training set have the modality, return a DummyClassifier guessing the mean
             # of the target.
             if x.shape[0] == 0:
@@ -195,7 +193,7 @@ class SMNSR(BaseStackedModel):
         patients = forecast_definition[TADPOLEData.PTID].unique()
 
         results = []
-        # Loop over patients
+        # Loop over the patients
         for i, ptid in enumerate(patients):
             if self.verbosity > 1:
                 print("%i/%i" % (i, len(patients)))
@@ -208,6 +206,8 @@ class SMNSR(BaseStackedModel):
             start_time_points = [patient_time_points[-1]]
 
             if self.forecast:
+                if self.verbosity > 1:
+                    print("%i/%i" % (i, len(patients)))
                 modality_count = 0
                 prediction = None
                 for i, modality in enumerate(self.ranked_modalities):
@@ -219,7 +219,7 @@ class SMNSR(BaseStackedModel):
                         nan_mask=nan_mask,
                     ):
                         continue
-                    # Get features from lower stack.
+                    # Get features from the lower stack.
                     x = (
                         np.array([[ptid, start_time_points[0]]]),
                         start_time_points[0] + np.array(target_time_points),
@@ -298,9 +298,8 @@ class SMNSR(BaseStackedModel):
                                 break
                     if modality_count > 0:
                         prediction[Y_HAT] = prediction[Y_HAT] / modality_count
-                    assert (
-                        prediction is not None,
-                        "No modalities modalities for patient %s" % ptid,
+                    assert prediction is not None, (
+                        "No modalities modalities for patient %s" % ptid
                     )
                     results.append(prediction)
         results: pd.DataFrame = pd.concat(results)

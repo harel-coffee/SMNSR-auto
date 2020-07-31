@@ -32,6 +32,6 @@ setuptools.setup(
     ],
     data_files=[
         ("smnsr", ["smnsr/logging.yaml"]),
-        ("modalities", ["modalities/modalities.yaml", "modalities/TADPOLE_D1_D2.csv"]),
+        ("modalities", ["modalities/modalities.yaml"]),
     ],
 )

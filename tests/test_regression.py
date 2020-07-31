@@ -4,19 +4,27 @@ from smnsr.patients import AugmentedTADPOLEData, TADPOLEData
 import pandas as pd
 import pandas as pd
 import numpy as np
+import os
 
 
 class TestSNSR(TestCase):
 
-    TS_FILE = "merged_0.p"
     MODALITY = "cognitive1"
-    DUMP_PATH = "../output/"
+    OUTPUT_PATH = "../output/"
     MODALITY_PATH = "../modalities/"
     TARGET = "ADAS13"
-    tadpole_data = TADPOLEData(modality_k=2)
-    data = AugmentedTADPOLEData(
-        tadpole_data, DUMP_PATH + TS_FILE, tadpole_data.get_ptids()
+    DATA_FILE = MODALITY_PATH + "TADPOLE_D1_D2.csv"
+    TS_FILE = OUTPUT_PATH + "merged_all.p"
+    PRE_CALCULATED_KNNSR = (
+        "https://drive.google.com/uc?id=1diTUWzctbl5MfpgoKBuGa-hvIXVgJcx7"
     )
+
+    assert os.path.exists(
+        DATA_FILE
+    ), "TADPOLE_D1_D2.csv must be stored in the modality folder"
+    assert os.path.exists(DATA_FILE), "Pre-merged ts data must be provided"
+    tadpole_data = TADPOLEData(data=DATA_FILE, modality_k=2, challenge_filter=True)
+    data = AugmentedTADPOLEData(tadpole_data, TS_FILE, tadpole_data.get_ptids())
     FORECAST_STEP_SIZE = 6
     FORECAST_DISTANCE = 120
     D1_D2_FILE = "TADPOLE_D1_D2.csv"
@@ -76,3 +84,21 @@ class TestSNSR(TestCase):
         x[TADPOLEData.PTID] = self.data.data.rids_to_ptids(x[TADPOLEData.RID])
         x = x.iloc[0:100, :]
         self.__forecast_test(x)
+
+    def test_download_and_forecast_all(self):
+        data = AugmentedTADPOLEData(
+            self.tadpole_data, self.TS_FILE, self.tadpole_data.get_ptids()
+        )
+
+        model = SMNSR(
+            data,
+            training_cv_folds=2,
+            verbosity=2,
+            mode="bypass_knnsr",
+            max_modalities=8,
+            forecast=True,
+        )
+        model.fit(data.get_ptids())
+
+        prediction = model.predict(self.tadpole_data.df_raw, target=self.TARGET)
+        self.assertTrue(prediction.shape[0] > 0)
