@@ -2,9 +2,7 @@ import pandas as pd
 from smnsr.models import KNNSR
 import numpy as np
 import logging
-
 from smnsr.patients import TADPOLEData
-
 import psutil
 import ray
 import sys

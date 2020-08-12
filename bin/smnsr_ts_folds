@@ -12,7 +12,7 @@ import argparse
 
 cli = argparse.ArgumentParser()
 cli.add_argument("-m", "--modality_path", type=str, default="../../modalities/")
-cli.add_argument("-o", "--out", type=str, default="../../dump/")
+cli.add_argument("-o", "--out", type=str, default="../../output/")
 cli.add_argument("-n", "--name", type=str, default="fold_")
 cli.add_argument("-e", "--extension", type=str, default=".p")
 cli.add_argument("-f", "--folds", type=int, default=10)
@@ -31,7 +31,7 @@ print("Initializing ray")
 num_cpus = args.cpus
 if num_cpus < 1:
     num_cpus = psutil.cpu_count(logical=False)
-print("CPUs: %i" % num_cpus)
+
 sys.stdout.flush()
 ray.shutdown()
 ray.init(num_cpus=num_cpus)
