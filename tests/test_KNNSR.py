@@ -3,10 +3,13 @@ from smnsr.patients import TADPOLEData
 from smnsr.models import KNNSR
 import numpy as np
 
+MODALITY_PATH = "../modalities/"
+DATA_FILE = MODALITY_PATH + "TADPOLE_D1_D2.csv"
+
 
 class TestKNNSRModel(TestCase):
 
-    data = TADPOLEData(challenge_filter=True, modality_k=2)
+    data = TADPOLEData(data=DATA_FILE, challenge_filter=True, modality_k=2)
     PTID = "011_S_0002"
     C_TIME = 0.0
     FORECAST_WINDOW = 6.0

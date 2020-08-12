@@ -31,7 +31,7 @@ class SMNSR(BaseStackedModel):
         data: AugmentedTADPOLEData,
         training_cv_folds=5,
         n_jobs=None,
-        verbosity=2,
+        verbosity=0,
         mode="xgb",
         forecast_min="baseline",
         forecast_max=None,
@@ -107,7 +107,7 @@ class SMNSR(BaseStackedModel):
         self.target = target
 
         self.ranked_modalities = []
-        modalities = self.data.getModalities()
+        modalities = self.data.get_modalities()
         tictoc = TicToc()
 
         # Create a fall-back regressor guessing the target mean
@@ -195,8 +195,7 @@ class SMNSR(BaseStackedModel):
         results = []
         # Loop over the patients
         for i, ptid in enumerate(patients):
-            if self.verbosity > 1:
-                print("%i/%i" % (i, len(patients)))
+
             target_time_points = sorted(
                 forecast_definition[forecast_definition[TADPOLEData.PTID] == ptid][
                     TADPOLEData.C_MONTH

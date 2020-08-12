@@ -380,7 +380,7 @@ class TADPOLEData:
             else:
                 data = self._df[self._df.columns.intersection(column_names)]
             if self.backend == "vaex":
-               data = data.to_pandas_df()
+                data = data.to_pandas_df()
 
         data.to_csv(save_folder + modality + ".csv")
 
@@ -479,29 +479,38 @@ class TADPOLEData:
         measurements = measurements.dropna()
         return measurements
 
-    def has_modality(self, ptid, modality, time_points=None, target=None, nan_mask=[]):
+    def has_modality(
+        self,
+        ptid,
+        modality,
+        time_points=None,
+        target=None,
+        nan_mask=[],
+        predictable=False,
+    ):
 
         expected_columns = self.modality_columns[modality].copy()
         # Missing target feature may be imputed if it missing from the modality.
         if target and target in expected_columns:
             expected_columns.remove(target)
-
+        expected_columns.append(target)
         data = self._df
         if len(nan_mask) > 0:
             data = self._df.copy()
             data[nan_mask] = np.nan
 
         if time_points:
-            return (
-                data[
-                    (data[self.PTID] == ptid) & (data[self.C_MONTH].isin(time_points))
-                ][expected_columns]
-                .dropna()
-                .shape[0]
-                > 0
-            )
+            data = data[
+                (data[self.PTID] == ptid) & (data[self.C_MONTH].isin(time_points))
+            ]
         else:
-            return data[data[self.PTID] == ptid][expected_columns].dropna().shape[0] > 0
+            data = data[data[self.PTID] == ptid]
+
+        data = data.sort_values(self.C_MONTH)
+        if predictable and target:
+            return data[expected_columns].iloc[1:, :].dropna().shape[0] > 0
+        else:
+            return data[expected_columns].dropna().shape[0] > 0
 
     def get_patient_modalities(self, ptid, time_points=None, target=None):
         return [
@@ -510,8 +519,33 @@ class TADPOLEData:
             if self.has_modality(ptid, modality, time_points=time_points, target=target)
         ]
 
-    def get_ptids(self):
-        return self._df[self.PTID].unique().tolist()
+    def get_ptids(self, min_time_points=1, target=None):
+
+        columns = [self.PTID]
+        if target:
+            columns.append(target)
+        if min_time_points == 1:
+            ptids = self._df[columns]
+        else:
+            counts = self._df[self.PTID].value_counts()
+            ptids = self._df[
+                self._df[self.PTID].isin(counts.index[counts >= min_time_points])
+            ]
+        if target is not None:
+            ptids = ptids.sort_values(self.C_MONTH)
+            predictable = (
+                ptids.loc[
+                    ptids.groupby(self.PTID)[target]
+                    .apply(lambda x: x.iloc[1:])
+                    .index.get_level_values(1),
+                    :,
+                ]
+                .groupby(self.PTID)[target]
+                .apply(lambda x: x.isnull().all())
+            )
+            predictable = predictable[~predictable]
+            ptids = ptids[ptids[self.PTID].isin(predictable.index)]
+        return ptids[self.PTID].unique().tolist()
 
     def column_difference(self, df1: pd.DataFrame, df2: pd.DataFrame):
         df2_columns = []
@@ -564,12 +598,14 @@ class TADPOLEData:
         )
         return ptid_df[self.PTID].values.tolist()
 
-    def save_dummy(self,file_name="dummy_data.csv",n_samples=300):
+    def save_dummy(self, file_name="dummy_data.csv", n_samples=300):
 
         dummy = self.df_raw.copy()
 
         for c in dummy.columns:
             dummy[c] = np.random.permutation(dummy[c].values)
 
-        dummy = dummy[ dummy[TADPOLEData.PTID].isin( dummy[TADPOLEData.PTID].unique()[0:n_samples])]
+        dummy = dummy[
+            dummy[TADPOLEData.PTID].isin(dummy[TADPOLEData.PTID].unique()[0:n_samples])
+        ]
         dummy.to_csv(file_name)

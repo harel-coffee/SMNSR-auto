@@ -14,6 +14,7 @@ class TestSNSR(TestCase):
     MODALITY_PATH = "../modalities/"
     TARGET = "ADAS13"
     DATA_FILE = MODALITY_PATH + "TADPOLE_D1_D2.csv"
+    D3_DATA_FILE = MODALITY_PATH + "D3.csv"
     TS_FILE = OUTPUT_PATH + "merged_all.p"
     PRE_CALCULATED_KNNSR = (
         "https://drive.google.com/uc?id=1diTUWzctbl5MfpgoKBuGa-hvIXVgJcx7"
@@ -22,6 +23,7 @@ class TestSNSR(TestCase):
     assert os.path.exists(
         DATA_FILE
     ), "TADPOLE_D1_D2.csv must be stored in the modality folder"
+    assert os.path.exists(D3_DATA_FILE), "D3.csv must be stored in the modality folder"
     assert os.path.exists(DATA_FILE), "Pre-merged ts data must be provided"
     tadpole_data = TADPOLEData(data=DATA_FILE, modality_k=2, challenge_filter=True)
     data = AugmentedTADPOLEData(tadpole_data, TS_FILE, tadpole_data.get_ptids())
@@ -29,11 +31,13 @@ class TestSNSR(TestCase):
     FORECAST_DISTANCE = 120
     D1_D2_FILE = "TADPOLE_D1_D2.csv"
 
-    def __forecast_test(self, x, forecast_start="2018-01-01"):
-        model = SMNSR(
-            self.data, training_cv_folds=2, mode="bypass_knnsr", forecast=True
-        )
-        model.fit(self.data.get_ptids())
+    def __forecast_test(self, x, forecast_start="2018-01-01", data=None):
+
+        if data is None:
+            data = self.data
+
+        model = SMNSR(data, training_cv_folds=2, mode="bypass_knnsr", forecast=True)
+        model.fit(data.get_ptids())
         y_hat = model.predict(
             x.tail(10),
             self.TARGET,
@@ -44,24 +48,17 @@ class TestSNSR(TestCase):
         self.assertIsNotNone(y_hat)
         self.assertTrue(y_hat.shape[0] > 0)
 
-    def test_forecast(self, baseline="last"):
+    def test_forecast(self):
         x = self.data.get_ptids()[0:100]
         n_patients = len(x)
-        n_predicted_points = int(self.FORECAST_DISTANCE / self.FORECAST_STEP_SIZE)
         model = SMNSR(
-            self.data,
-            training_cv_folds=2,
-            mode="bypass_knnsr",
-            forecast=True,
-            baseline=baseline,
+            self.data, training_cv_folds=2, mode="bypass_knnsr", forecast=True
         )
         model.fit(self.data.get_ptids())
         y_hat = model.predict(x, self.TARGET)
 
         self.assertIsNotNone(y_hat)
         self.assertTrue(y_hat.shape[0] > 0)
-
-        self.assertTrue(y_hat.shape[0] == n_patients * n_predicted_points)
 
     def test_forecast_on_df(self):
         x: pd.DataFrame = pd.read_csv(
@@ -80,10 +77,17 @@ class TestSNSR(TestCase):
 
     def test_forecast_on_df_3(self):
 
-        x: pd.DataFrame = pd.read_csv(self.MODALITY_PATH + self.D3, low_memory=False)
+        x: pd.DataFrame = pd.read_csv(self.D3_DATA_FILE, low_memory=False)
         x[TADPOLEData.PTID] = self.data.data.rids_to_ptids(x[TADPOLEData.RID])
         x = x.iloc[0:100, :]
-        self.__forecast_test(x)
+
+        tadpole_data = TADPOLEData(
+            data=self.DATA_FILE, modality_k=2, challenge_filter=False
+        )
+        data = AugmentedTADPOLEData(
+            tadpole_data, self.TS_FILE, tadpole_data.get_ptids()
+        )
+        self.__forecast_test(x, data=data)
 
     def test_download_and_forecast_all(self):
         data = AugmentedTADPOLEData(

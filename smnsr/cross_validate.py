@@ -13,10 +13,14 @@ import numpy as np
 
 def perform_cv(args):
     splitter = KFold(args.folds, random_state=0, shuffle=True)
-    data = TADPOLEData(modality_path=args.modality_path, modality_k=args.modality_k)
+    data = TADPOLEData(
+        data=args.modality_path + args.data_file,
+        modality_path=args.modality_path,
+        modality_k=args.modality_k,
+    )
 
     # Split the ptids into n folds
-    ptids = data.get_ptids()
+    ptids = data.get_ptids(min_time_points=2, target=args.target)
     print("Total patients in CV: %i" % len(ptids))
     t = TicToc()
     print("CV mode %s" % args.mode)
@@ -29,7 +33,7 @@ def perform_cv(args):
         train_ptids = [ptids[i] for i in train_index]
         test_ptids = [ptids[i] for i in test_index]
         aug_data = AugmentedTADPOLEData(
-            data, args.precompute_path + "merged_%i.p" % fold, train_ptids
+            data, args.precomputed_path + "merged_%i.p" % fold, train_ptids
         )
         model = SMNSR(aug_data, n_jobs=args.cpus, forecast=False, mode=args.mode)
         print("Fitting model")
@@ -46,9 +50,7 @@ def perform_cv(args):
             % (fold, y[TADPOLEData.PTID].unique().shape[0])
         )
 
-        y_hat = model.predict(
-            prediction_definition, target=args.target
-        )
+        y_hat = model.predict(prediction_definition, target=args.target)
         prediction = y.merge(
             y_hat,
             left_on=[TADPOLEData.PTID, TADPOLEData.C_MONTH],
@@ -131,11 +133,12 @@ def parse_args(cli_args):
     cli.add_argument("--precomputed", action="store_true")
     cli.add_argument("--modality_path", type=str, default="../../modalities/")
     cli.add_argument(
-        "--precompute_path", type=str, default="../../dump/precomputed_folds/"
+        "--precomputed_path", type=str, default="../../output/precomputed_folds/"
     )
+    cli.add_argument("--data_file", type=str, default="TADPOLE_D1_D2.csv")
     cli.add_argument("--target", type=str, default="ADAS13")
     cli.add_argument("--bl_forecast", default=False, action="store_true")
-    cli.add_argument("--output_path", type=str, default="../../dump/")
+    cli.add_argument("--output_path", type=str, default="../../output/")
     cli.add_argument("--result_file_name", type=str, default="cv_result.p")
     cli.add_argument("--modality_k", type=int, default=8)
     cli.add_argument("--cpus", type=int, default=None)

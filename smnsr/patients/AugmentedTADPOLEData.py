@@ -149,7 +149,7 @@ class AugmentedTADPOLEData:
             return self.valid_ptids
         return self.data.get_ptids()
 
-    def getModalities(self):
+    def get_modalities(self):
         return self.data.get_modalities()
 
     def save(self, output_path, overwrite=False):
