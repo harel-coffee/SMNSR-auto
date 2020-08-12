@@ -25,7 +25,9 @@ class TestSNSR(TestCase):
     ), "TADPOLE_D1_D2.csv must be stored in the modality folder"
     assert os.path.exists(D3_DATA_FILE), "D3.csv must be stored in the modality folder"
     assert os.path.exists(DATA_FILE), "Pre-merged ts data must be provided"
-    tadpole_data = TADPOLEData(data=DATA_FILE, modality_k=2, challenge_filter=True)
+    tadpole_data = TADPOLEData(
+        data=DATA_FILE, modality_k=2, challenge_filter=True, modality_path=MODALITY_PATH
+    )
     data = AugmentedTADPOLEData(tadpole_data, TS_FILE, tadpole_data.get_ptids())
     FORECAST_STEP_SIZE = 6
     FORECAST_DISTANCE = 120
@@ -82,7 +84,10 @@ class TestSNSR(TestCase):
         x = x.iloc[0:100, :]
 
         tadpole_data = TADPOLEData(
-            data=self.DATA_FILE, modality_k=2, challenge_filter=False
+            data=self.DATA_FILE,
+            modality_k=2,
+            challenge_filter=False,
+            modality_path=self.MODALITY_PATH,
         )
         data = AugmentedTADPOLEData(
             tadpole_data, self.TS_FILE, tadpole_data.get_ptids()

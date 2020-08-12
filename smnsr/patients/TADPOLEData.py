@@ -4,7 +4,6 @@ Created on Fri Oct 13 17:15:12 2017
 @author: ciszek
 """
 
-import modin.pandas as mpd
 import pandas as pd
 import vaex as vx
 import numpy as np
@@ -13,7 +12,6 @@ import re
 from sklearn.impute import KNNImputer
 import itertools
 import yaml
-import os
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pkg_resources
@@ -134,14 +132,6 @@ class TADPOLEData:
 
     def set_backend(self, backend="pandas"):
         self.backend = pd
-        if isinstance(self._df, mpd.DataFrame) and backend == "pandas":
-            self._df = self._df._to_pandas()
-            self.backend = pd
-            if self.verbosity == 2:
-                print("Backend set to %s" % backend)
-        if isinstance(self._df, pd.DataFrame) and backend == "modin":
-            self._df = mpd.DataFrame(self._df)
-            self.backend = mpd
         if self.verbosity == 2:
             print("Backend set to %s" % backend)
 

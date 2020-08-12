@@ -4,6 +4,7 @@ import pathlib
 import pickle
 import bz2
 import os
+
 MODALITY_PATH = "../modalities/"
 OUTPUT_PATH = "../output/"
 TMP_PATH = "./tmp/"
@@ -12,9 +13,12 @@ PTIDS = ["011_S_0002", "011_S_0003", "011_S_0003", "011_S_0003", "011_S_0003"]
 TEST_PTID = "test_ptid"
 DATA_FILE = "TADPOLE_D1_D2.csv"
 
+
 class TestAugmentedTADPOLEData(TestCase):
 
-    assert os.path.exists(MODALITY_PATH + DATA_FILE), "TADPOLE_D1_D2.csv must be stored in the modality folder"
+    assert os.path.exists(
+        MODALITY_PATH + DATA_FILE
+    ), "TADPOLE_D1_D2.csv must be stored in the modality folder"
 
     TS_FILE = "fold_0.p"
     MERGED_TS_FILE = OUTPUT_PATH + "merged_all.p"
@@ -24,18 +28,25 @@ class TestAugmentedTADPOLEData(TestCase):
     GOOGLE_DRIVE_URL = (
         "https://drive.google.com/uc?id=1diTUWzctbl5MfpgoKBuGa-hvIXVgJcx7"
     )
-    assert os.path.exists(MERGED_TS_FILE), "A merged ts file must be provided for testing"
+    assert os.path.exists(
+        MERGED_TS_FILE
+    ), "A merged ts file must be provided for testing"
 
-    _tadpole_data: TADPOLEData = TADPOLEData(modality_k=2, challenge_filter=True,data=MODALITY_PATH+DATA_FILE)
+    _tadpole_data: TADPOLEData = TADPOLEData(
+        modality_k=2,
+        challenge_filter=True,
+        data=MODALITY_PATH + DATA_FILE,
+        modality_path=MODALITY_PATH,
+    )
     _data: AugmentedTADPOLEData = AugmentedTADPOLEData(
         _tadpole_data, MERGED_TS_FILE, _tadpole_data.get_ptids()
     )
 
     def test_get_ptids(self):
-        self.assertTrue( len(self._tadpole_data.get_ptids()) > 0 )
+        self.assertTrue(len(self._tadpole_data.get_ptids()) > 0)
 
     def test_get_modalities(self):
-        self.assertTrue( len(self._tadpole_data.get_modalities()) > 0 )
+        self.assertTrue(len(self._tadpole_data.get_modalities()) > 0)
 
     def test_get_xy(self):
         x, y, t = self._data.getXY(

@@ -15,12 +15,14 @@ DATA_FILE = MODALITY_PATH + "TADPOLE_D1_D2.csv"
 
 class TestTADPOLEWrapper(unittest.TestCase):
 
-    assert os.path.exists(DATA_FILE), "TADPOLE_D1_D2.csv must be stored in the modality folder"
-    _data = TADPOLEData(data=DATA_FILE)
+    assert os.path.exists(
+        DATA_FILE
+    ), "TADPOLE_D1_D2.csv must be stored in the modality folder"
+    _data = TADPOLEData(data=DATA_FILE, modality_path=MODALITY_PATH)
 
     def test_init_from_df(self):
         df = pd.read_csv(DATA_FILE)
-        data = TADPOLEData(data=df)
+        data = TADPOLEData(data=df, modality_path=MODALITY_PATH)
         self.assertTrue(len(data.get_ptids()) > 0)
 
     def test_save_modality(self):

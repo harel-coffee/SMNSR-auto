@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="smnsr",
-    version="0.4.4",
+    version="0.4.5",
     author="rciszek",
     author_email="rkciszek@gmail.com",
     description="SMNSR",
@@ -13,7 +13,8 @@ setuptools.setup(
     python_requires=">=3.7",
     scripts=[("bin/smnsr_ts_folds"), ("bin/smnsr_cv"), ("bin/smnsr_merge")],
     install_requires=[
-        "pandas >= 1.0.3",
+        "PySocks >= 1.7.1",
+        "pandas >= 1.0.5",
         "matplotlib >= 3.2.2",
         "scipy >= 1.4.1",
         "xgboost >= 1.1.1",
@@ -24,7 +25,6 @@ setuptools.setup(
         "gdown >= 3.11.1",
         "numpy >= 1.18.4",
         "seaborn >= 0.10.1",
-        "modin >= 0.7.3",
         "python_dateutil >= 2.8.1",
         "PyYAML >= 5.3.1",
         "scikit_learn >= 0.23.1",

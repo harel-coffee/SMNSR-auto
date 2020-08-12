@@ -48,7 +48,9 @@ class Test(TestCase):
         self.assertIsNotNone(results)
 
     def test_evaluate_predictions(self):
-        tadpole_data = TADPOLEData(data=self.DATA_FILE, modality_k=2)
+        tadpole_data = TADPOLEData(
+            data=self.DATA_FILE, modality_k=2, modality_path=self.MODALITY_PATH
+        )
         cv_results = pickle.load(open(self.OUTPUT_PATH + self.CV_RESULT_FILE, "rb"))
         evaluate_predictions(cv_results, tadpole_data)
         self.assertTrue(True)

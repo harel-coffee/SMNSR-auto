@@ -20,7 +20,9 @@ class TestTimeseriesCreation(unittest.TestCase):
     PATIENT_MODALITY = "patient"
 
     def test_create_features(self):
-        data = TADPOLEData(data=self.DATA_FILE, modality_k=2)
+        data = TADPOLEData(
+            data=self.DATA_FILE, modality_k=2, modality_path=self.MODALITY_PATH
+        )
         ray.init(num_cpus=psutil.cpu_count(logical=False), ignore_reinit_error=True)
         ptids = data.get_ptids()
         timeseries_features, knn_models = create_features(
@@ -31,7 +33,10 @@ class TestTimeseriesCreation(unittest.TestCase):
 
     def test_precomputed_modality_for_ptid(self):
         tadpole_data = TADPOLEData(
-            modality_k=8, data=self.DATA_FILE, challenge_filter=True
+            modality_k=8,
+            data=self.DATA_FILE,
+            challenge_filter=True,
+            modality_path=self.MODALITY_PATH,
         )
         splitter = KFold(self.N_FOLDS, random_state=0, shuffle=True)
         # Patients with no predictable target value, i.e. patients with only baseline target value,
