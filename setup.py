@@ -30,10 +30,10 @@ setuptools.setup(
         "scikit_learn >= 0.23.1",
         "vaex >= 3.0.0",
     ],
-    data_files=[
-        ("smnsr", ["smnsr/logging.yaml"]),
-        ("modalities", ["modalities/modalities.yaml"]),
-    ],
+    package_data={
+        "smnsr": ["logging.yaml"],
+        "smnsr":  ["modalities/modalities.yaml"]
+    },
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Environment :: Console",

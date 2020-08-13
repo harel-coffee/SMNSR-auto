@@ -13,7 +13,7 @@ class TestTimeseriesCreation(unittest.TestCase):
 
     MODALITIES = ["cognitive2"]
     OUTPUT_PATH = "../output/"
-    MODALITY_PATH = "../modalities/"
+    MODALITY_PATH = "../smnsr/modalities/"
     DATA_FILE = MODALITY_PATH + "TADPOLE_D1_D2.csv"
     TARGET = "ADAS13"
     N_FOLDS = 10

@@ -97,7 +97,7 @@ class KNNSR:
             y = np.zeros(predicted_timepoints[0].shape[0])
 
         for pt in range(0, n_samples):
-            assert self.tadpole_data.has_modality(x[pt, 0], self.modality, target=self.target_value)
+            assert self.tadpole_data.has_modality(x[pt, 0], self.modality)
 
             forecasted, similarities, std, skew, v_min, v_max, v_value = self.predict_slope(x[pt, :],
                                                                                             predicted_time_points=
@@ -230,35 +230,6 @@ class KNNSR:
             regression_forecast = regression_forecast +target_y - regression_forecast[0]
             regression_forecast = regression_forecast[1:,:]
             predictions[key] = regression_forecast
-        #            s_predicted_values = copy.copy(h_predicted_values)
-        #            try:
-        #                popt, pcov = curve_fit(sigmoid, (untransformed_train_features[:,0],untransformed_train_features[:,1]), y_values.ravel(),maxfev=6000)
-        #                s_predicted_values = sigmoid(( np.arange(0,predicted_time_points+1),np.tile(pt_target,(predicted_time_points+1))), *popt)
-        #                s_predicted_values = s_predicted_values + pt_target - s_predicted_values[0]
-        #
-        #            except Exception as e:
-        #                print("NO CONVERGENCE")
-        #                print(str(e))
-
-
-            # pylab.figure()
-            # pylab.plot(time_points, y_values, 'o', label='data')
-            # pylab.plot(0, target_y, 'x', label='start')
-            # pylab.plot(np.expand_dims(predicted_time_points-start_point, axis=1),regression_forecast, label='hb')
-            # pylab.legend(loc='best')
-            # pylab.title(ptid + "_" + str(start_point) )
-            # pylab.show()
-            # points = pd.DataFrame()
-            # points["Relative months"] = time_points
-            # points["ADAS13"] = y_values
-            # g = sns.jointplot("Relative months", "ADAS13", data=points,
-            #                   kind="reg", truncate=False,
-            #                   color="m", height=7)
-            # plt.show()
-        # except Exception as e:
-        #     predictions = np.tile([target_y, target_y, target_y], (predicted_time_points + 1, 1))
-        #     print("KNN EXCEPTION")
-        #     print(str(e))
 
         similarities = np.mean(dist)
         std = np.std(dist)

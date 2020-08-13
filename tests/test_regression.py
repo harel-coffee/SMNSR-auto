@@ -11,7 +11,7 @@ class TestSNSR(TestCase):
 
     MODALITY = "cognitive1"
     OUTPUT_PATH = "../output/"
-    MODALITY_PATH = "../modalities/"
+    MODALITY_PATH = "../smnsr/modalities/"
     TARGET = "ADAS13"
     DATA_FILE = MODALITY_PATH + "TADPOLE_D1_D2.csv"
     D3_DATA_FILE = MODALITY_PATH + "D3.csv"
@@ -26,7 +26,7 @@ class TestSNSR(TestCase):
     assert os.path.exists(D3_DATA_FILE), "D3.csv must be stored in the modality folder"
     assert os.path.exists(DATA_FILE), "Pre-merged ts data must be provided"
     tadpole_data = TADPOLEData(
-        data=DATA_FILE, modality_k=2, challenge_filter=True, modality_path=MODALITY_PATH
+        data=DATA_FILE, modality_k=8, challenge_filter=True, modality_path=MODALITY_PATH
     )
     data = AugmentedTADPOLEData(tadpole_data, TS_FILE, tadpole_data.get_ptids())
     FORECAST_STEP_SIZE = 6

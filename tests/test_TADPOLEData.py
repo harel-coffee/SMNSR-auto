@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import shutil
 
-MODALITY_PATH = "../modalities/"
+MODALITY_PATH = "../smnsr/modalities/"
 OUTPUT_PATH = "../output/"
 TMP_PATH = "./tmp/"
 TARGET = "ADAS13"

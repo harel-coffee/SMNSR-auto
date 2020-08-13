@@ -8,7 +8,7 @@ import pickle
 class Test(TestCase):
     FOLDS = 2
     TARGET = "ADAS13"
-    MODALITY_PATH = "../modalities/"
+    MODALITY_PATH = "../smnsr/modalities/"
     OUTPUT_PATH = "../output/"
     MODALITY_K = 2
     CV_RESULT_FILE = "cv_result.p"

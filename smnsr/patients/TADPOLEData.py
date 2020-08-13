@@ -69,7 +69,7 @@ class TADPOLEData:
             print("Reading data")
         if modality_path is None:
             modality_path = pkg_resources.resource_filename(
-                __name__, "/../../modalities/"
+                __name__, "/../modalities/"
             )
 
         assert isinstance(data, str) or isinstance(
@@ -481,9 +481,10 @@ class TADPOLEData:
 
         expected_columns = self.modality_columns[modality].copy()
         # Missing target feature may be imputed if it missing from the modality.
-        if target and target in expected_columns:
-            expected_columns.remove(target)
-        expected_columns.append(target)
+        if target:
+            if target in expected_columns:
+                expected_columns.remove(target)
+            expected_columns.append(target)
         data = self._df
         if len(nan_mask) > 0:
             data = self._df.copy()

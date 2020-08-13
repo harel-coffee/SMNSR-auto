@@ -3,7 +3,7 @@ from smnsr.patients import TADPOLEData
 from smnsr.models import KNNSR
 import numpy as np
 
-MODALITY_PATH = "../modalities/"
+MODALITY_PATH = "../smnsr/modalities/"
 DATA_FILE = MODALITY_PATH + "TADPOLE_D1_D2.csv"
 
 
